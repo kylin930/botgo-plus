@@ -29,10 +29,8 @@
 ## 安装
 
 ```bash
-go get github.com/your-username/botgo-plus
+go get github.com/kylin930/botgo-plus
 ```
-
-> 将 `your-username` 替换为实际的 GitHub 用户名。
 
 ---
 
@@ -49,11 +47,11 @@ import (
     "net/http"
     "time"
 
-    botgo "github.com/your-username/botgo-plus"
-    "github.com/your-username/botgo-plus/dto"
-    "github.com/your-username/botgo-plus/event"
-    "github.com/your-username/botgo-plus/interaction/webhook"
-    "github.com/your-username/botgo-plus/token"
+    botgo "github.com/kylin930/botgo-plus"
+    "github.com/kylin930/botgo-plus/dto"
+    "github.com/kylin930/botgo-plus/event"
+    "github.com/kylin930/botgo-plus/interaction/webhook"
+    "github.com/kylin930/botgo-plus/token"
 )
 
 func main() {
