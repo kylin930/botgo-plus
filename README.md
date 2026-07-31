@@ -265,7 +265,7 @@ func(evt *dto.WSPayload, data *dto.WSGroupATMessageData) error {
 
 ## 魔改特性（来自 gensokyo）
 
-除了对齐 botpy 的完整功能外，本版本还从 gensokyo 框架中吸收了以下实用增强。
+除了对齐 botpy 的完整功能外，本版本还从 [gensokyo](https://github.com/Hoshinonyaruko/Gensokyo) 框架中吸收了以下实用增强。
 
 ### 富媒体文件直传（无需公网 URL）
 
@@ -318,7 +318,7 @@ _, err = api.PostGroupMessage(ctx, groupID, msg)
 
 - [botgo](https://github.com/tencent-connect/botgo) - 腾讯 QQ 机器人官方 Go SDK
 - [botpy](https://github.com/tencent-connect/botpy) - 腾讯 QQ 机器人官方 Python SDK，本项目事件与字段对齐的参考来源
-- gensokyo 框架 - 魔改特性来源
+- [gensokyo](https://github.com/Hoshinonyaruko/Gensokyo) - 魔改特性来源
 
 ---
 
