@@ -1,7 +1,42 @@
+<div align="center">
+
 # botgo-plus
 
-腾讯 QQ 机器人官方 Go SDK 的增强版。基于官方 [botgo](https://github.com/tencent-connect/botgo) 魔改，
-参考官方 [botpy](https://github.com/tencent-connect/botpy)（Python SDK）的完整实现进行对齐，
+_腾讯 QQ 机器人官方 Go SDK 增强版，补齐群聊与 C2C 场景的完整支持_
+
+</div>
+
+<p align="center">
+  <a href="https://raw.githubusercontent.com/kylin930/botgo-plus/main/LICENSE">
+    <img src="https://img.shields.io/github/license/kylin930/botgo-plus" alt="license">
+  </a>
+  <a href="https://github.com/kylin930/botgo-plus/releases">
+    <img src="https://img.shields.io/github/v/release/kylin930/botgo-plus?color=blueviolet&include_prereleases" alt="release">
+  </a>
+  <a href="https://github.com/tencent-connect/botpy">
+    <img src="https://img.shields.io/badge/botpy-aligned-blue?style=flat" alt="botpy">
+  </a>
+  <a href="https://goreportcard.com/report/github.com/kylin930/botgo-plus">
+    <img src="https://goreportcard.com/badge/github.com/kylin930/botgo-plus" alt="GoReportCard">
+  </a>
+  <a href="https://pkg.go.dev/github.com/kylin930/botgo-plus">
+    <img src="https://pkg.go.dev/badge/github.com/kylin930/botgo-plus.svg" alt="Go Reference">
+  </a>
+</p>
+
+<p align="center">
+  <a href="#安装">安装</a>
+  ·
+  <a href="#快速开始">快速开始</a>
+  ·
+  <a href="#事件列表">事件列表</a>
+  ·
+  <a href="#魔改特性来自-gensokyo">魔改特性</a>
+</p>
+
+---
+
+基于官方 [botgo](https://github.com/tencent-connect/botgo) 魔改，参考官方 [botpy](https://github.com/tencent-connect/botpy)（Python SDK）的完整实现进行对齐，
 补齐群聊（Group）与 C2C（好友私聊）场景下缺失的事件、字段和数据结构。
 
 ---
