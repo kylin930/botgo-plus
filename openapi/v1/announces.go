@@ -3,7 +3,7 @@ package v1
 import (
 	"context"
 
-	"github.com/tencent-connect/botgo/dto"
+	"github.com/kylin930/botgo-plus/dto"
 )
 
 // CreateChannelAnnounces 创建子频道公告

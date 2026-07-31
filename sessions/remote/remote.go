@@ -9,12 +9,12 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
-	"github.com/tencent-connect/botgo/dto"
-	"github.com/tencent-connect/botgo/log"
-	"github.com/tencent-connect/botgo/sessions/manager"
-	"github.com/tencent-connect/botgo/sessions/remote/lock"
-	"github.com/tencent-connect/botgo/token"
-	"github.com/tencent-connect/botgo/websocket"
+	"github.com/kylin930/botgo-plus/dto"
+	"github.com/kylin930/botgo-plus/log"
+	"github.com/kylin930/botgo-plus/sessions/manager"
+	"github.com/kylin930/botgo-plus/sessions/remote/lock"
+	"github.com/kylin930/botgo-plus/token"
+	"github.com/kylin930/botgo-plus/websocket"
 	"golang.org/x/oauth2"
 )
 

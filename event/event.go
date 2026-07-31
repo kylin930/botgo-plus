@@ -7,7 +7,7 @@ import (
 
 	"github.com/tidwall/gjson" // 由于回包的 d 类型不确定，gjson 用于从回包json中提取 d 并进行针对性的解析
 
-	"github.com/tencent-connect/botgo/dto"
+	"github.com/kylin930/botgo-plus/dto"
 )
 
 var eventParseFuncMapLock = new(sync.RWMutex)

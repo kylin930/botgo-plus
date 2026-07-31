@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/tencent-connect/botgo/dto"
-	"github.com/tencent-connect/botgo/openapi/options"
+	"github.com/kylin930/botgo-plus/dto"
+	"github.com/kylin930/botgo-plus/openapi/options"
 )
 
 // CreateDirectMessage 创建私信频道

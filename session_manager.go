@@ -1,8 +1,8 @@
 package botgo
 
 import (
-	"github.com/tencent-connect/botgo/dto"
-	"github.com/tencent-connect/botgo/sessions/local"
+	"github.com/kylin930/botgo-plus/dto"
+	"github.com/kylin930/botgo-plus/sessions/local"
 	"golang.org/x/oauth2"
 )
 

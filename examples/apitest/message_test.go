@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/tencent-connect/botgo/dto/keyboard"
+	"github.com/kylin930/botgo-plus/dto/keyboard"
 
-	"github.com/tencent-connect/botgo/dto"
+	"github.com/kylin930/botgo-plus/dto"
 )
 
 func TestMessage(t *testing.T) {

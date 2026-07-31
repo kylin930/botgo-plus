@@ -1,10 +1,10 @@
-module github.com/tencent-connect/botgo/examples
+module github.com/kylin930/botgo-plus/examples
 
 go 1.21
 
 require (
 	github.com/google/uuid v1.3.0
-	github.com/tencent-connect/botgo v0.1.7
+	github.com/kylin930/botgo-plus v0.1.7
 	go.uber.org/zap v1.19.1
 	gopkg.in/yaml.v3 v3.0.1
 )

@@ -3,7 +3,7 @@ package v1
 import (
 	"fmt"
 
-	"github.com/tencent-connect/botgo/constant"
+	"github.com/kylin930/botgo-plus/constant"
 )
 
 type uri string

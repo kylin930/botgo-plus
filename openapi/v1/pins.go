@@ -3,7 +3,7 @@ package v1
 import (
 	"context"
 
-	"github.com/tencent-connect/botgo/dto"
+	"github.com/kylin930/botgo-plus/dto"
 )
 
 // AddPins 添加精华消息

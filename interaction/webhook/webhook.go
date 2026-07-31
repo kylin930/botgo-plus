@@ -7,12 +7,12 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/tencent-connect/botgo/constant"
-	"github.com/tencent-connect/botgo/dto"
-	"github.com/tencent-connect/botgo/event"
-	"github.com/tencent-connect/botgo/interaction/signature"
-	"github.com/tencent-connect/botgo/log"
-	"github.com/tencent-connect/botgo/token"
+	"github.com/kylin930/botgo-plus/constant"
+	"github.com/kylin930/botgo-plus/dto"
+	"github.com/kylin930/botgo-plus/event"
+	"github.com/kylin930/botgo-plus/interaction/signature"
+	"github.com/kylin930/botgo-plus/log"
+	"github.com/kylin930/botgo-plus/token"
 )
 
 type ack struct {

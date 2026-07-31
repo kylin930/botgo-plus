@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/tencent-connect/botgo/dto"
+	"github.com/kylin930/botgo-plus/dto"
 )
 
 const (

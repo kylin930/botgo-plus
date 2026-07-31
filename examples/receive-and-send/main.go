@@ -9,12 +9,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tencent-connect/botgo"
-	"github.com/tencent-connect/botgo/dto"
-	"github.com/tencent-connect/botgo/dto/message"
-	"github.com/tencent-connect/botgo/event"
-	"github.com/tencent-connect/botgo/interaction/webhook"
-	"github.com/tencent-connect/botgo/token"
+	"github.com/kylin930/botgo-plus"
+	"github.com/kylin930/botgo-plus/dto"
+	"github.com/kylin930/botgo-plus/dto/message"
+	"github.com/kylin930/botgo-plus/event"
+	"github.com/kylin930/botgo-plus/interaction/webhook"
+	"github.com/kylin930/botgo-plus/token"
 	"gopkg.in/yaml.v3"
 )
 

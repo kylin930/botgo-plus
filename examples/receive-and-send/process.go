@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tencent-connect/botgo/dto"
-	"github.com/tencent-connect/botgo/openapi"
+	"github.com/kylin930/botgo-plus/dto"
+	"github.com/kylin930/botgo-plus/openapi"
 )
 
 // Processor is a struct to process message

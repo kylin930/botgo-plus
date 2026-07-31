@@ -10,16 +10,16 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/tencent-connect/botgo"
-	"github.com/tencent-connect/botgo/dto"
-	"github.com/tencent-connect/botgo/dto/message"
-	"github.com/tencent-connect/botgo/event"
-	"github.com/tencent-connect/botgo/interaction/webhook"
+	"github.com/kylin930/botgo-plus"
+	"github.com/kylin930/botgo-plus/dto"
+	"github.com/kylin930/botgo-plus/dto/message"
+	"github.com/kylin930/botgo-plus/event"
+	"github.com/kylin930/botgo-plus/interaction/webhook"
 	"gopkg.in/yaml.v3"
 
-	"github.com/tencent-connect/botgo/constant"
-	"github.com/tencent-connect/botgo/openapi"
-	"github.com/tencent-connect/botgo/token"
+	"github.com/kylin930/botgo-plus/constant"
+	"github.com/kylin930/botgo-plus/openapi"
+	"github.com/kylin930/botgo-plus/token"
 )
 
 const (

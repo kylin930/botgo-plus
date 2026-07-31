@@ -5,8 +5,8 @@ import (
 	"math"
 	"time"
 
-	"github.com/tencent-connect/botgo/dto"
-	"github.com/tencent-connect/botgo/errs"
+	"github.com/kylin930/botgo-plus/dto"
+	"github.com/kylin930/botgo-plus/errs"
 )
 
 // CanNotResumeErrSet 不能进行 resume 操作的错误码

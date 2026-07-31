@@ -1,6 +1,6 @@
 package dto
 
-import "github.com/tencent-connect/botgo/dto/keyboard"
+import "github.com/kylin930/botgo-plus/dto/keyboard"
 
 // SendType 消息类型
 type SendType int

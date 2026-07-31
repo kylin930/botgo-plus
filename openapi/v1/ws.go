@@ -3,7 +3,7 @@ package v1
 import (
 	"context"
 
-	"github.com/tencent-connect/botgo/dto"
+	"github.com/kylin930/botgo-plus/dto"
 )
 
 // WS 获取带分片 WSS 接入点

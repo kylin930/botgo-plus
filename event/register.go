@@ -1,7 +1,7 @@
 package event
 
 import (
-	"github.com/tencent-connect/botgo/dto"
+	"github.com/kylin930/botgo-plus/dto"
 )
 
 // DefaultHandlers 默认的 handler 结构，管理所有支持的 handler 类型
