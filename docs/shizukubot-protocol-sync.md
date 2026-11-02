@@ -117,3 +117,9 @@ Managed sandbox note: GOPATH was also set to a writable temporary directory for
 the sumdb checkpoint (changing GOMODCACHE alone is insufficient in a read-only
 home). No checksum verification was disabled. The temporary consumer has its own
 Git metadata to avoid the executor's synthetic /tmp/.git affecting VCS stamping.
+
+Compatibility detail: exported struct fields are additive. As with any Go struct
+field addition, external code using unkeyed struct literals may need to switch to
+keyed literals; old named fields, their types and their JSON property names remain
+available. Before explicitly running historical live examples, replace their
+sample target identifiers with your own authorized test targets.
