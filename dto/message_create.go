@@ -19,11 +19,11 @@ type APIMessage interface {
 // RichMediaMessage 富媒体消息
 // 注意：直接使用srv_send_msg=tre时会占用主动消息频率，且多媒体文件不能复用，建议先上传，然后再使用消息发送类型7进行发送
 type RichMediaMessage struct {
-	EventID    string `json:"event_id,omitempty"`     // 已经废弃：要回复的事件id, 逻辑同MsgID
-	FileType   uint64 `json:"file_type,omitempty"`    // 业务类型，图片，文件，语音，视频 文件类型，取值:1图片,2视频,3语音(目前语音只支持silk格式)
-	URL        string `json:"url,omitempty"`          // 需发送的富媒体文件，HTTP或者HTTPS链接
-	FileData   string `json:"file_data,omitempty"`    // 没有base64头的base64（魔改自 Gensokyo：直传二进制，无需公网URL）。与URL二选一，优先使用FileData
-	SrvSendMsg bool   `json:"srv_send_msg,omitempty"` // 为true时会直接发送到群/C2C，且会占用主动消息频率, 为false为上传富媒体文件
+	EventID    string `json:"event_id,omitempty"`  // 已经废弃：要回复的事件id, 逻辑同MsgID
+	FileType   uint64 `json:"file_type,omitempty"` // 业务类型，图片，文件，语音，视频 文件类型，取值:1图片,2视频,3语音(目前语音只支持silk格式)
+	URL        string `json:"url,omitempty"`       // 需发送的富媒体文件，HTTP或者HTTPS链接
+	FileData   string `json:"file_data,omitempty"` // 没有base64头的base64（魔改自 Gensokyo：直传二进制，无需公网URL）。与URL二选一，优先使用FileData
+	SrvSendMsg bool   `json:"srv_send_msg"`        // 为true时会直接发送到群/C2C，且会占用主动消息频率, 为false为上传富媒体文件
 	Content    string `json:"content,omitempty"`
 	MsgSeq     int64  `json:"msg_seq,omitempty"` // 机器人对于回复一个msg_id或者event_id的消息序号，指定后根据这个字段和msg_id或者event_id进行去重
 }
@@ -54,7 +54,7 @@ const (
 // MessageToCreate 发送消息结构体定义
 type MessageToCreate struct {
 	Content string      `json:"content,omitempty"`
-	MsgType MessageType `json:"msg_type,omitempty"` //消息类型: 0:文字消息, 2: md消息
+	MsgType MessageType `json:"msg_type"` //消息类型: 0:文字消息, 2: md消息
 	Embed   *Embed      `json:"embed,omitempty"`
 	Ark     *Ark        `json:"ark,omitempty"`
 	Image   string      `json:"image,omitempty"`
@@ -166,7 +166,8 @@ type InputNotify struct {
 
 // MediaInfo 富媒体信息
 type MediaInfo struct {
-	FileUUID string `json:"file_uuid,omitempty"` // 文件ID
-	FileInfo []byte `json:"file_info,omitempty"` // 富媒体文件信息，通过上传接口取得
-	TTL      int    `json:"ttl,omitempty"`       // 有效期，单位秒
+	FileUUID    string `json:"file_uuid,omitempty"` // 文件ID
+	FileInfo    []byte `json:"file_info,omitempty"`
+	FileInfoRaw string `json:"-"`             // 富媒体文件信息，通过上传接口取得
+	TTL         int    `json:"ttl,omitempty"` // 有效期，单位秒
 }

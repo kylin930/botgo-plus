@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -44,10 +45,10 @@ type qqBotTokenRsp struct {
 func (r *qqBotTokenRsp) UnmarshalJSON(data []byte) error {
 	// 创建一个临时结构体来解析 JSON 数据
 	var temp struct {
-		Code        int    `json:"code"`
-		Message     string `json:"message"`
-		AccessToken string `json:"access_token"`
-		ExpiresIn   string `json:"expires_in"`
+		Code        int             `json:"code"`
+		Message     string          `json:"message"`
+		AccessToken string          `json:"access_token"`
+		ExpiresIn   json.RawMessage `json:"expires_in"`
 	}
 
 	// 解析 JSON 数据到临时结构体
@@ -56,7 +57,7 @@ func (r *qqBotTokenRsp) UnmarshalJSON(data []byte) error {
 	}
 
 	// 将字符串转换为 int64
-	expiresIn, err := strconv.ParseInt(temp.ExpiresIn, 10, 64)
+	expiresIn, err := strconv.ParseInt(strings.Trim(string(temp.ExpiresIn), `"`), 10, 64)
 	if err != nil {
 		return err
 	}
@@ -80,6 +81,8 @@ type QQBotTokenSource struct {
 	credentials *QQBotCredentials
 	cachedToken atomic.Value
 	sg          singleflight.Group
+	client      *http.Client
+	endpoint    string
 }
 
 // NewQQBotTokenSource 初始化
@@ -111,6 +114,9 @@ func (w *QQBotTokenSource) Token() (*oauth2.Token, error) {
 }
 
 func (w *QQBotTokenSource) getNewToken() (*oauth2.Token, error) {
+	if w.credentials == nil {
+		return nil, fmt.Errorf("QQ token credentials unavailable")
+	}
 	retrieveReq := qqBotTokenReq{
 		AppID:        w.credentials.AppID,
 		ClientSecret: w.credentials.AppSecret,
@@ -120,15 +126,20 @@ func (w *QQBotTokenSource) getNewToken() (*oauth2.Token, error) {
 		return nil, err
 	}
 	payload := bytes.NewReader(data)
-	log.Debugf("retrieve access token URL:%v req:%v", getTokenURL(), string(data))
-	req, err := http.NewRequest(http.MethodPost, getTokenURL(), payload)
+
+	endpoint := w.endpoint
+	if endpoint == "" {
+		endpoint = getTokenURL()
+	}
+	req, err := http.NewRequest(http.MethodPost, endpoint, payload)
 	if err != nil {
 		log.Errorf("init http req failed:%v", err)
 		return nil, err
 	}
 	req.Header.Add("Content-Type", "application/json")
-	client := &http.Client{
-		Timeout: 10 * time.Second,
+	client := w.client
+	if client == nil {
+		client = &http.Client{Timeout: 10 * time.Second}
 	}
 	rsp, err := client.Do(req)
 	if err != nil {
@@ -138,21 +149,18 @@ func (w *QQBotTokenSource) getNewToken() (*oauth2.Token, error) {
 	defer func() {
 		_ = rsp.Body.Close()
 	}()
-	rspTraceID := rsp.Header.Get(constant.HeaderTraceID)
 	body, err := io.ReadAll(rsp.Body)
 	if err != nil {
 		log.Errorf("read rsp failed:%v", err)
 		return nil, err
 	}
-	log.Debugf("access token:%v traceID:%v", string(body), rspTraceID)
+
 	retrieveRsp := &qqBotTokenRsp{}
 	if err = json.Unmarshal(body, retrieveRsp); err != nil {
-		log.Errorf("unmarshal rsp failed:%v traceID:%v", err, rspTraceID)
-		return nil, err
+		return nil, fmt.Errorf("QQ token response invalid (http=%d)", rsp.StatusCode)
 	}
-	if retrieveRsp.Code != 0 {
-		log.Errorf("query acessToken err:%v.%v traceID:%v", retrieveRsp.Code, retrieveRsp.Message, rspTraceID)
-		return nil, fmt.Errorf("%v.%v", retrieveRsp.Code, retrieveRsp.Message)
+	if retrieveRsp.Code != 0 || rsp.StatusCode != http.StatusOK || retrieveRsp.AccessToken == "" || retrieveRsp.ExpiresIn <= 0 {
+		return nil, fmt.Errorf("QQ authentication failed: http=%d code=%d", rsp.StatusCode, retrieveRsp.Code)
 	}
 	expiry := time.Now().Add(time.Duration(retrieveRsp.ExpiresIn) * time.Second)
 	return &oauth2.Token{
@@ -162,6 +170,9 @@ func (w *QQBotTokenSource) getNewToken() (*oauth2.Token, error) {
 		ExpiresIn:   retrieveRsp.ExpiresIn,
 	}, nil
 }
+
+// Invalidate discards cached authentication after a platform token-expired error.
+func (w *QQBotTokenSource) Invalidate() { w.cachedToken.Store(&oauth2.Token{}) }
 
 // GetAppID 获取appid
 func (w *QQBotTokenSource) GetAppID() string {
@@ -177,18 +188,18 @@ func StartRefreshAccessToken(ctx context.Context, tokenSource oauth2.TokenSource
 	if err != nil {
 		return err
 	}
-	log.Debugf("token:%+v ", tk)
+
 	go func() {
 		var consecutiveFailures int
 		for {
 			var refreshMilliSec int64
 			//上一轮获取 tk 失败
 			if tk == nil {
-				if consecutiveFailures > 10 {
-					panic("get token failed continuously for more than ten times")
+
+				if consecutiveFailures < 10 {
+					consecutiveFailures++
 				}
-				consecutiveFailures++
-				refreshMilliSec = 1000 // 1000ms后重试
+				refreshMilliSec = int64(consecutiveFailures) * 1000 // bounded retry delay; cancellation remains cooperative
 			} else {
 				consecutiveFailures = 0
 				refreshMilliSec = getRefreshMilliSec(tk.ExpiresIn)
@@ -201,7 +212,7 @@ func StartRefreshAccessToken(ctx context.Context, tokenSource oauth2.TokenSource
 					log.Debugf("start to refresh access token %s", time.Now().Format(time.StampMilli))
 					tk, err = tokenSource.Token()
 					if err != nil {
-						log.Errorf("refresh access token failed:%s", err)
+						log.Error("refresh access token failed")
 					}
 					timer.Stop()
 				}
@@ -217,10 +228,6 @@ func StartRefreshAccessToken(ctx context.Context, tokenSource oauth2.TokenSource
 	return nil
 }
 
-var (
-	r = rand.New(rand.NewSource(time.Now().Unix()))
-)
-
 // getRefreshSec 为token刷新保留提前量。避免由于网络延迟等原因导致的token刷新不及时。
 func getRefreshMilliSec(tokenTTLSec int64) int64 {
 	refreshMilliSec := tokenTTLSec * 1000
@@ -230,7 +237,7 @@ func getRefreshMilliSec(tokenTTLSec int64) int64 {
 	refreshMilliSec -= defaultExpiryDeltaMillSec
 	// 随机化，避免所有机器人都同时获取access_token
 	if refreshMilliSec > randTimeUpperLimitMilliSec {
-		rand := r.Int63n(randTimeUpperLimitMilliSec)
+		rand := rand.Int63n(randTimeUpperLimitMilliSec)
 		log.Debugf("rand:%d", rand)
 		refreshMilliSec -= rand
 	}

@@ -2,6 +2,7 @@ package lock
 
 import (
 	"context"
+	"os"
 	"testing"
 	"time"
 
@@ -9,14 +10,19 @@ import (
 )
 
 func TestLock_Lock(t *testing.T) {
+	address := os.Getenv("BOTGO_PLUS_REDIS_TEST_ADDR")
+	if address == "" {
+		t.Skip("Redis integration not executed; set BOTGO_PLUS_REDIS_TEST_ADDR explicitly")
+	}
 	conn := redis.NewClient(&redis.Options{
-		Addr:         "localhost:6379",
+		Addr:         address,
 		DialTimeout:  800 * time.Millisecond,
 		ReadTimeout:  3 * time.Second,
 		WriteTimeout: 3 * time.Second,
 	})
 
-	key := "lock-key-test"
+	defer conn.Close()
+	key := "botgo-plus-test-" + time.Now().Format("20060102150405.000000000")
 	value := "ddd"
 	expire := 4 * time.Second
 	ctx := context.Background()

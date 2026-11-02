@@ -44,3 +44,22 @@ func TestVerify(t *testing.T) {
 		})
 	}
 }
+
+func TestMissingTimestampCannotSignOrVerify(t *testing.T) {
+	body := []byte("private-body")
+	header := http.Header{}
+	if _, err := Generate("local-secret", header, body); err == nil {
+		t.Fatal("missing timestamp accepted for signing")
+	}
+	// A valid signature created for a different input cannot authenticate missing metadata.
+	header.Set(HeaderTimestamp, "12345")
+	sig, err := Generate("local-secret", header, body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	header.Set(HeaderSig, sig)
+	header.Del(HeaderTimestamp)
+	if ok, err := Verify("local-secret", header, body); ok || err == nil {
+		t.Fatal("missing timestamp verified")
+	}
+}

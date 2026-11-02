@@ -85,6 +85,9 @@ const (
 
 // getURL 获取接口地址，会处理沙箱环境判断
 func (o *openAPI) getURL(endpoint uri) string {
+	if o.baseURL != "" {
+		return o.baseURL + string(endpoint)
+	}
 	d := constant.APIDomain
 	if o.sandbox {
 		d = constant.SandBoxAPIDomain

@@ -3,7 +3,9 @@ package v1
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/kylin930/botgo-plus/constant"
 	"net/http"
 
 	"github.com/go-resty/resty/v2"
@@ -166,7 +168,16 @@ func (o *openAPI) PostGroupMessage(ctx context.Context, groupID string, msg dto.
 	if err != nil {
 		return nil, err
 	}
-	return resp.Result().(*dto.Message), nil
+	result := resp.Result().(*dto.Message)
+	result.TraceID = safeTraceID(resp.Header().Get(constant.HeaderTraceID))
+	if msg.GetSendType() == dto.RichMedia {
+		if result.FileInfoRaw == "" && len(result.FileInfo) == 0 {
+			return nil, errors.New("QQ upload response missing file_info")
+		}
+	} else if result.ID == "" {
+		return nil, errors.New("QQ send response missing message ID")
+	}
+	return result, nil
 }
 
 func getC2CURIBySendType(msgType dto.SendType) uri {
@@ -190,7 +201,16 @@ func (o *openAPI) PostC2CMessage(ctx context.Context, userID string, msg dto.API
 	if err != nil {
 		return nil, err
 	}
-	return resp.Result().(*dto.Message), nil
+	result := resp.Result().(*dto.Message)
+	result.TraceID = safeTraceID(resp.Header().Get(constant.HeaderTraceID))
+	if msg.GetSendType() == dto.RichMedia {
+		if result.FileInfoRaw == "" && len(result.FileInfo) == 0 {
+			return nil, errors.New("QQ upload response missing file_info")
+		}
+	} else if result.ID == "" {
+		return nil, errors.New("QQ send response missing message ID")
+	}
+	return result, nil
 }
 
 func baseRequest(ctx context.Context, reqCMD *resty.Request, method, url string, opt ...options.Option) (

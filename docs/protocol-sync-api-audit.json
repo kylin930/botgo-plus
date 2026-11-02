@@ -1,0 +1,17 @@
+{
+  "added_symbols_and_fields": 20,
+  "baseline": "de69850",
+  "checked_symbols_and_fields": 1222,
+  "incompatible_signatures_or_tags": {},
+  "removed": {},
+  "reviewed_wire_corrections": {
+    "dto.MessageToCreate.MsgType": [
+      "MessageType `json:\"msg_type,omitempty\"`",
+      "MessageType `json:\"msg_type\"`"
+    ],
+    "dto.RichMediaMessage.SrvSendMsg": [
+      "bool `json:\"srv_send_msg,omitempty\"`",
+      "bool `json:\"srv_send_msg\"`"
+    ]
+  }
+}

@@ -1,3 +1,6 @@
+//go:build qq_live
+// +build qq_live
+
 package apitest
 
 import (

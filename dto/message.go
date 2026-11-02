@@ -2,6 +2,7 @@ package dto
 
 // Message 消息结构体定义
 type Message struct {
+	TraceID string `json:"-"` // Request-specific OpenAPI trace; prefer this to the last-completed TraceID getter.
 	// 消息ID
 	ID string `json:"id"`
 	// 子频道ID
@@ -40,7 +41,8 @@ type Message struct {
 	// 私信场景下，该字段用来标识从哪个频道发起的私信
 	SrcGuildID string `json:"src_guild_id"`
 	// 上传富媒体文件后返回的文件信息。 注意以群或者C2C消息上传后， 同类型可以重复使用，不同类型需要不能使用。
-	FileInfo []byte `json:"file_info,omitempty"`
+	FileInfo    []byte `json:"file_info,omitempty"`
+	FileInfoRaw string `json:"-"`
 	// 上传富媒体文件后的有效期, 单位:秒, 在有效期内可以重复使用。
 	TTL uint `json:"ttl,omitempty"`
 	// 全局消息序号
