@@ -41,7 +41,7 @@ func Verify(secret string, header http.Header, httpBody []byte) (bool, error) {
 	}
 	content, err := genOriginalContent(header.Get(HeaderTimestamp), httpBody)
 	if err != nil {
-		log.Errorf("get original content error: %v", err)
+		return false, err
 	}
 	return ed25519.Verify(key.PublicKey, content, sigBuffer), nil
 }
@@ -55,7 +55,7 @@ func Generate(secret string, header http.Header, httpBody []byte) (string, error
 	}
 	content, err := genOriginalContent(header.Get(HeaderTimestamp), httpBody)
 	if err != nil {
-		log.Errorf("get original content error: %v", err)
+		return "", err
 	}
 	return hex.EncodeToString(ed25519.Sign(key.PrivateKey, content)), nil
 }

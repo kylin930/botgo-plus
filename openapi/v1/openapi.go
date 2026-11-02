@@ -4,9 +4,12 @@ package v1
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/go-resty/resty/v2" // resty 是一个优秀的 rest api 客户端，可以极大的减少开发基于 rest 标准接口求请求的封装工作量
@@ -29,6 +32,8 @@ type openAPI struct {
 	sandbox     bool   // 请求沙箱环境
 	debug       bool   // debug 模式，调试sdk时候使用
 	lastTraceID string // lastTraceID id
+	traceMu     sync.Mutex
+	baseURL     string
 
 	restyClient *resty.Client // resty client 复用
 }
@@ -45,6 +50,8 @@ func (o *openAPI) Version() openapi.APIVersion {
 
 // TraceID 获取 lastTraceID id
 func (o *openAPI) TraceID() string {
+	o.traceMu.Lock()
+	defer o.traceMu.Unlock()
 	return o.lastTraceID
 }
 
@@ -66,15 +73,19 @@ func (o *openAPI) WithTimeout(duration time.Duration) openapi.OpenAPI {
 	return o
 }
 
-// SetDebug 设置调试模式, 输出更多过程日志
+// SetDebug retains the legacy switch; diagnostics contain metadata only, never raw HTTP dumps.
 func (o *openAPI) SetDebug(debug bool) openapi.OpenAPI {
-	o.restyClient.Debug = debug
+	o.debug = debug
+	o.restyClient.Debug = false // metadata only; never dump credentials or message bodies
 	return o
 }
 
 // Transport 透传请求
 func (o *openAPI) Transport(ctx context.Context, method, url string, body interface{}) ([]byte, error) {
 	resp, err := o.request(ctx).SetBody(body).Execute(method, url)
+	if resp == nil {
+		return nil, err
+	}
 	return resp.Body(), err
 }
 
@@ -83,7 +94,7 @@ func (o *openAPI) setupClient(appID string) {
 	o.restyClient = resty.New().
 		SetTransport(createTransport(nil, MaxIdleConns)). // 自定义 transport
 		SetLogger(log.DefaultLogger).
-		SetDebug(o.debug).
+		SetDebug(false).
 		SetTimeout(o.timeout).
 		SetHeader("User-Agent", version.String()).
 		SetHeader("X-Union-Appid", appID).
@@ -95,15 +106,14 @@ func (o *openAPI) setupClient(appID string) {
 			},
 		).
 		OnBeforeRequest(
-			func(c *resty.Client, _ *resty.Request) error {
+			func(_ *resty.Client, request *resty.Request) error {
 				tk, err := o.tokenSource.Token()
 				if err != nil {
-					log.Errorf("[setupClient] retrieve token failed:%s", err)
-					return err
+					return errors.New("QQ authentication token unavailable")
 				}
-				c.SetAuthScheme(tk.TokenType)
+				request.SetAuthScheme(tk.TokenType)
 				log.Debugf("token type:%s", tk.TokenType)
-				c.SetAuthToken(tk.AccessToken)
+				request.SetAuthToken(tk.AccessToken)
 				return nil
 			},
 		).
@@ -115,12 +125,23 @@ func (o *openAPI) setupClient(appID string) {
 				if err := openapi.DoRespFilterChains(resp.Request.RawRequest, resp.RawResponse); err != nil {
 					return err
 				}
-				traceID := resp.Header().Get(constant.HeaderTraceID)
+				traceID := safeTraceID(resp.Header().Get(constant.HeaderTraceID))
+				o.traceMu.Lock()
 				o.lastTraceID = traceID
-				// 非成功含义的状态码，需要返回 error 供调用方识别
-				if !openapi.IsSuccessStatus(resp.StatusCode()) {
-					o.handleError(resp)
-					return errs.New(resp.StatusCode(), string(resp.Body()), traceID)
+				o.traceMu.Unlock()
+				var body errBody
+				_ = json.Unmarshal(resp.Body(), &body)
+				code := body.Code
+				if body.ErrCode != 0 {
+					code = body.ErrCode
+				}
+				if !openapi.IsSuccessStatus(resp.StatusCode()) || code != 0 {
+					if code == errs.APICodeTokenExpireOrNotExist {
+						if source, ok := o.tokenSource.(interface{ Invalidate() }); ok {
+							source.Invalidate()
+						}
+					}
+					return &errs.PlatformError{Status: resp.StatusCode(), Code: code, TraceID: traceID}
 				}
 				return nil
 			},
@@ -148,34 +169,15 @@ type errBody struct {
 	TraceID string `json:"trace_id"` // 服务端traceID, 用于问题排查
 }
 
-// handleError 处理openapi调用失败的情况
-func (o *openAPI) handleError(resp *resty.Response) {
-	var b errBody
-	err := json.Unmarshal(resp.Body(), &b)
-	if err != nil {
-		log.Errorf("parse errBody fail, err:%v, body:%s", err, string(resp.Body()))
-		return
-	}
-	if b.ErrCode == errs.APICodeTokenExpireOrNotExist || b.Code == errs.APICodeTokenExpireOrNotExist {
-		log.Errorf("token expire or not exist, update token")
-		_, _ = o.tokenSource.Token()
-	}
+// respInfo intentionally excludes URL targets, headers, request and response bodies.
+func respInfo(resp *resty.Response) string {
+	return fmt.Sprintf("[OPENAPI] method=%s status=%d elapsed=%s", resp.Request.Method, resp.StatusCode(), resp.Time())
 }
 
-// respInfo 用于输出日志的时候格式化数据
-func respInfo(resp *resty.Response) string {
-	bodyJSON, _ := json.Marshal(resp.Request.Body)
-	return fmt.Sprintf(
-		"[OPENAPI]%v %v, traceID:%v, status:%v, elapsed:%v req: %v, resp: %v",
-		resp.Request.Method,
-		resp.Request.URL,
-		resp.Header().Get(constant.HeaderTraceID),
-		resp.Status(),
-		resp.Time(),
-		string(bodyJSON),
-		string(resp.Body()),
-	)
-}
+// WithBaseURL is an optional SDK extension for local HTTP integration tests.
+// Configure before using the instance concurrently; application config cannot set it.
+func (o *openAPI) WithBaseURL(url string) openapi.OpenAPI { o.baseURL = url; return o }
+
 func createTransport(localAddr net.Addr, idleConns int) *http.Transport {
 	dialer := &net.Dialer{
 		Timeout:   60 * time.Second,
@@ -195,4 +197,17 @@ func createTransport(localAddr net.Addr, idleConns int) *http.Transport {
 		MaxIdleConnsPerHost:   idleConns,
 		MaxConnsPerHost:       idleConns,
 	}
+}
+
+// Correlation IDs are bounded metadata, not an arbitrary response/header dump.
+func safeTraceID(value string) string {
+	if len(value) > 128 {
+		return ""
+	}
+	if strings.IndexFunc(value, func(r rune) bool {
+		return !(r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r >= '0' && r <= '9' || r == '-' || r == '_')
+	}) >= 0 {
+		return ""
+	}
+	return value
 }

@@ -125,7 +125,7 @@ func (c *Client) Listening() error {
 // Write 往 ws 写入数据
 func (c *Client) Write(message *dto.WSPayload) error {
 	m, _ := json.Marshal(message)
-	log.Infof("%s write %s message, %v", c.session, dto.OPMeans(message.OPCode), string(m))
+	log.Infof("%s write %s message", c.session, dto.OPMeans(message.OPCode))
 
 	if err := c.conn.WriteMessage(wss.TextMessage, m); err != nil {
 		log.Errorf("%s WriteMessage failed, %v", c.session, err)
@@ -195,7 +195,7 @@ func (c *Client) readMessageToQueue() {
 	for {
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
-			log.Errorf("%s read message failed, %v, message %s", c.session, err, string(message))
+			log.Errorf("%s read message failed", c.session)
 			close(c.messageQueue)
 			// accessToken过期
 			if wss.IsCloseError(err, errs.WSCodeBackendAuthenticationFail) {
@@ -211,7 +211,7 @@ func (c *Client) readMessageToQueue() {
 		}
 		payload.RawMessage = message
 		payload.Session = c.session
-		log.Infof("%s receive %s message, %s", c.session, dto.OPMeans(payload.OPCode), string(message))
+		log.Infof("%s receive %s message", c.session, dto.OPMeans(payload.OPCode))
 		// 处理内置的一些事件，如果处理成功，则这个事件不再投递给业务
 		if c.isHandleBuildIn(payload) {
 			continue
@@ -238,7 +238,7 @@ func (c *Client) listenMessageAndHandle() {
 		}
 		// 解析具体事件，并投递给业务注册的 handler
 		if err := event.ParseAndHandle(payload); err != nil {
-			log.Errorf("%s parseAndHandle failed, %v", c.session, err)
+			log.Errorf("%s event handler failed", c.session)
 		}
 	}
 	log.Infof("%s message queue is closed", c.session)
@@ -271,7 +271,7 @@ func (c *Client) isHandleBuildIn(payload *dto.WSPayload) bool {
 func (c *Client) startHeartBeatTicker(message []byte) {
 	helloData := &dto.WSHelloData{}
 	if err := event.ParseData(message, helloData); err != nil {
-		log.Errorf("%s hello data parse failed, %v, message %v", c.session, err, message)
+		log.Errorf("%s hello data parse failed", c.session)
 	}
 	// 根据 hello 的回包，重新设置心跳的定时器时间
 	c.heartBeatTicker.Reset(time.Duration(helloData.HeartbeatInterval) * time.Millisecond)
@@ -281,7 +281,7 @@ func (c *Client) startHeartBeatTicker(message []byte) {
 func (c *Client) readyHandler(payload *dto.WSPayload) {
 	readyData := &dto.WSReadyData{}
 	if err := event.ParseData(payload.RawMessage, readyData); err != nil {
-		log.Errorf("%s parseReadyData failed, %v, message %v", c.session, err, payload.RawMessage)
+		log.Errorf("%s parseReadyData failed", c.session)
 	}
 	c.version = readyData.Version
 	// 基于 ready 事件，更新 session 信息

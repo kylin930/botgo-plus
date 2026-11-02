@@ -2,6 +2,7 @@
 package errs
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -86,6 +87,10 @@ func New(code int, text string, trace ...string) error {
 func Error(err error) *Err {
 	if e, ok := err.(*Err); ok {
 		return e
+	}
+	var platform *PlatformError
+	if errors.As(err, &platform) {
+		return &Err{code: platform.Status, text: fmt.Sprintf("QQ platform code=%d", platform.Code), trace: platform.TraceID}
 	}
 	return &Err{
 		code: 9999,
