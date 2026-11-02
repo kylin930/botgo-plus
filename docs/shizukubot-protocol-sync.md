@@ -95,3 +95,25 @@ Redis integration is explicitly skipped without BOTGO_PLUS_REDIS_TEST_ADDR.
 Historical real QQ API tests are excluded without qq_live and additionally require
 BOTGO_PLUS_LIVE_TESTS=1. **Redis and real QQ tests were not executed.** No live
 platform success is claimed, and no release/tag or main merge is performed.
+
+
+## Pinned implementation commit
+
+Implementation/test commit: **979b74884c88f5f0dfa21a5c2d8315b6ec654f4f**.
+Go's remote resolver generated **v0.0.0-20261102144408-979b74884c88** (not a
+handwritten release). No matching formal tag exists. README and the examples
+submodule pin this immutable implementation commit; the subsequent documentation
+commit does not change SDK runtime code. Do not install by tracking main or a
+local replace. The examples previously required v0.1.7, which does not exist in
+this repository; that dependency is corrected to the verified pseudo-version.
+
+The pinned module was downloaded from the remote repository into a new empty
+GOMODCACHE, checksum verification remained enabled, and a separate consumer built
+against it without any replace. Ordinary SDK tests also run from downloaded source.
+The examples submodule now tidies, tests, vets and builds against that external
+pseudo-version; live API examples are excluded by their explicit build tag.
+
+Managed sandbox note: GOPATH was also set to a writable temporary directory for
+the sumdb checkpoint (changing GOMODCACHE alone is insufficient in a read-only
+home). No checksum verification was disabled. The temporary consumer has its own
+Git metadata to avoid the executor's synthetic /tmp/.git affecting VCS stamping.

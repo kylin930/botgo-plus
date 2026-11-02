@@ -79,7 +79,7 @@ ShizukuBot P2.3 修复已同步到本仓库，保留既有增强字段、管理�
 ## 安装
 
 ```bash
-go get github.com/kylin930/botgo-plus
+go get github.com/kylin930/botgo-plus@v0.0.0-20261102144408-979b74884c88
 ```
 
 ---
@@ -146,7 +146,7 @@ func GroupATMessageEventHandler(api openapi.OpenAPI) event.GroupATMessageEventHa
     return func(evt *dto.WSPayload, data *dto.WSGroupATMessageData) error {
         // 获取发送者 openid（官方 botgo 拿不到这个字段）
         senderOpenID := data.Author.MemberOpenID
-        log.Printf("[群聊] %s 在群 %s 说: %s", senderOpenID, data.GroupID, data.Content)
+        log.Printf("[群聊] message_id_present=%t sender_present=%t", data.ID != "", senderOpenID != "")
 
         // 回复消息
         _, err := api.PostGroupMessage(
@@ -170,7 +170,7 @@ func C2CMessageEventHandler(api openapi.OpenAPI) event.C2CMessageEventHandler {
     return func(evt *dto.WSPayload, data *dto.WSC2CMessageData) error {
         // 获取发送者 openid（官方 botgo 拿不到这个字段）
         senderOpenID := data.Author.UserOpenID
-        log.Printf("[C2C] %s 说: %s", senderOpenID, data.Content)
+        log.Printf("[C2C] message_id_present=%t sender_present=%t", data.ID != "", senderOpenID != "")
 
         // 回复消息
         _, err := api.PostC2CMessage(

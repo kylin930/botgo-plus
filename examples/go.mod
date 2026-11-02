@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/google/uuid v1.3.0
-	github.com/kylin930/botgo-plus v0.1.7
+	github.com/kylin930/botgo-plus v0.0.0-20261102144408-979b74884c88
 	go.uber.org/zap v1.19.1
 	gopkg.in/yaml.v3 v3.0.1
 )
