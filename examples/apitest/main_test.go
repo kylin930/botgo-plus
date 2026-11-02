@@ -1,3 +1,6 @@
+//go:build qq_live
+// +build qq_live
+
 package apitest
 
 import (
@@ -33,6 +36,7 @@ var (
 )
 
 func TestMain(m *testing.M) {
+ if os.Getenv("BOTGO_PLUS_LIVE_TESTS")!="1" { log.Print("real QQ integration not executed; explicit BOTGO_PLUS_LIVE_TESTS=1 required");os.Exit(1) }
 	ctx = context.Background()
 	content, err := os.ReadFile("./config.yaml")
 	if err != nil {
@@ -44,7 +48,6 @@ func TestMain(m *testing.M) {
 		log.Println(err)
 		os.Exit(1)
 	}
-	log.Println(credentials)
 	appid := credentials.AppID
 	tokenSource := token.NewQQBotTokenSource(credentials)
 	api = botgo.NewOpenAPI(appid, tokenSource).WithTimeout(3 * time.Second)

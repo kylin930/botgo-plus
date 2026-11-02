@@ -61,6 +61,21 @@ _腾讯 QQ 机器人官方 Go SDK 增强版，补齐群聊与 C2C 场景的完�
 
 ---
 
+## P2.3 协议同步与兼容性
+
+SDK 最低 Go **1.18**；原 go 1.16 声明与既有 oauth2/x/net 依赖不一致。
+ShizukuBot P2.3 修复已同步到本仓库，保留既有增强字段、管理事件、消息状态、
+富媒体和流式消息。详见 [差异与测试报告](docs/shizukubot-protocol-sync.md)
+和 [CHANGELOG](CHANGELOG.md)。普通测试只使用本地 Mock，不需要 QQ 凭证。
+
+- 文本显式 `msg_type:0`；普通消息使用原始 `msg_id`，支持事件用 `event_id`，二者不混用。
+- SDK 原样传递 `msg_seq`，不自动分配、不重试发送。事件生命周期和次数限额由调用框架管理。
+- 媒体先 `srv_send_msg:false` 上传，再 type 7 携带 `FileInfoRaw` 原样发送。
+- HTTP/业务失败返回 `*errs.PlatformError`，含请求专属 HTTP/业务码/TraceID；成功回复从 `Message.TraceID` 读取请求 TraceID。旧 `api.TraceID()` 仅为最后完成请求，虽然线程安全，但不能作为并发请求的关联依据。
+- 不记录原始正文、凭证和 Authorization；`SetDebug(true)` 保留调用兼容性，但不启用 Resty 原始 HTTP dump。
+- Webhook 公共函数保留；缺少 timestamp/signature、被修改的原始 body 会拒绝。
+- [可运行的本地媒体回复示例](example_protocol_test.go)：`go test -run Example_mediaReply`，不接触真实 QQ。
+
 ## 安装
 
 ```bash
@@ -289,7 +304,7 @@ import "github.com/tidwall/gjson"
 
 func(evt *dto.WSPayload, data *dto.WSGroupATMessageData) error {
     mentions := gjson.Get(string(evt.RawMessage), "d.mentions")
-    log.Printf("mentions 原始内容: %s", mentions.Raw)
+    log.Printf("mentions exists=%t count=%d", mentions.Exists(), len(mentions.Array()))
     return nil
 }
 ```
@@ -358,3 +373,18 @@ _, err = api.PostGroupMessage(ctx, groupID, msg)
 ## License
 
 遵循上游项目的 License。
+
+## 独立验证与外部集成边界
+
+```sh
+go test ./...
+go test -race ./...
+go vet ./...
+go build ./...
+```
+
+Redis 锁测试默认明确 Skip，只有设置 `BOTGO_PLUS_REDIS_TEST_ADDR` 才会访问自己的
+测试 Redis。历史 `examples/apitest` 需要 `qq_live` build tag 和
+`BOTGO_PLUS_LIVE_TESTS=1` 双重启用；涉及真实发送、成员/目标权限和本地凭证，
+不属于普通测试。本轮**没有执行真实 QQ 或 Redis 集成**，不能将它们称为通过。
+examples 是独立 module，版本必须固定到已推送的 SDK 提交，不使用父目录 replace。
